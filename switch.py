@@ -37,6 +37,7 @@ def send_bdpu_every_sec():
 def main():
     # init returns the max interface number. Our interfaces
     # are 0, 1, 2, ..., init_ret value + 1
+    MAC_Table = {}
     switch_id = sys.argv[1]
 
     num_interfaces = wrapper.init(sys.argv[2:])
@@ -48,7 +49,7 @@ def main():
     # Create and start a new thread that deals with sending BDPU
     t = threading.Thread(target=send_bdpu_every_sec)
     t.start()
-
+    
     # Printing interface names
     for i in interfaces:
         print(get_interface_name(i))
@@ -76,6 +77,30 @@ def main():
         print("Received frame of size {} on interface {}".format(length, interface), flush=True)
 
         # TODO: Implement forwarding with learning
+
+        # Am aflat portul pentru adresa MAC src
+        MAC_Table[src_mac] = interface
+        
+        # if is_unicast(dst):
+        #     if dest_mac in MAC_Table:
+        #         send_to_link(interface, length, data)
+        #     else:
+        #         for i in interfaces:
+        #             if i != interface:
+        #                 send_to_link(i, length, data)
+        # else:
+        #     # trimite cadrul pe toate celelalte porturi
+        #     # Atentie, acest broadcast va fi diferit in cazul in
+        #     # care avem VLAN-uri
+        #     for i in interfaces:
+        #         if i != interface:
+        #             send_to_link(i, length, data)
+        if dest_mac in MAC_Table:
+                send_to_link(interface, length, data)
+        else:
+            for i in interfaces:
+                if i != interface:
+                    send_to_link(i, length, data)
         # TODO: Implement VLAN support
         # TODO: Implement STP support
 
