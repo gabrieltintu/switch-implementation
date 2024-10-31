@@ -55,6 +55,27 @@ def main():
 	for i in interfaces:
 		print(get_interface_name(i))
 
+	# Open the file in read mode
+	if_vlan = {}
+	file = "switch" + switch_id + ".cfg"
+	file_path = os.path.join("configs", file)
+	with open(file_path, 'r') as f:
+		# Read all lines from the file
+		lines = f.readlines()
+		
+		# Process the first line separately (if needed)
+		switch_priority = lines[0].strip()  # First line content
+		
+		# Process subsequent lines
+		for line in lines[1:]:
+			# Strip whitespace and split by space
+			value = line.strip().split()
+			
+			interface_name = value[0]  # The first part is the key
+			interface_vlan = value[1]  # The second part is the value
+			if_vlan[interface_name] = interface_vlan
+
+
 	while True:
 		# Note that data is of type bytes([...]).
 		# b1 = bytes([72, 101, 108, 108, 111])  # "Hello"
@@ -63,7 +84,7 @@ def main():
 		interface, data, length = recv_from_any_link()
 
 		dest_mac, src_mac, ethertype, vlan_id = parse_ethernet_header(data)
-		print(f"interfata {interface}")
+		print(f"interfata {get_interface_name(interface)}")
 		# Print the MAC src and MAC dst in human readable format
 		dest_mac = ':'.join(f'{b:02x}' for b in dest_mac)
 		src_mac = ':'.join(f'{b:02x}' for b in src_mac)
@@ -80,38 +101,36 @@ def main():
 		# TODO: Implement forwarding with learning
 
 		# Am aflat portul pentru adresa MAC src
-		# MAC_Table[src_mac] = interface
+		MAC_Table[src_mac] = interface
 
 		# # TODO: Implement VLAN support
 		# if_vlan = {}
 
-		# # Open the file in read mode
-		# file = "switch" + switch_id + ".cfg"
-		# file_path = os.path.join("configs", file)
-		# with open(file_path, 'r') as f:
-		# 	# Read all lines from the file
-		# 	lines = f.readlines()
-			
-		# 	# Process the first line separately (if needed)
-		# 	switch_priority = lines[0].strip()  # First line content
-			
-		# 	# Process subsequent lines
-		# 	for line in lines[1:]:
-		# 		# Strip whitespace and split by space
-		# 		value = line.strip().split()
-				
-		# 		interface_name = value[0]  # The first part is the key
-		# 		interface_vlan = value[1]  # The second part is the value
-		# 		if_vlan[interface_name] = interface_vlan
 
+		# aflu vlan de pe portul pe care a fost primit cadrul
+		# recv_vlan = if_vlan[get_interface_name(interface)] === vlan_id ???
+		print(f"vlan_id {vlan_id}")
 
-		# # aflu vlan de pe portul pe care a fost primit cadrul
-		# # recv_vlan = if_vlan[get_interface_name(interface)] === vlan_id ???
-		# print(f"vlan_id {vlan_id}")
+		# if dest_mac in MAC_Table:
+        #     out_interface = MAC_Table[dest_mac]
+        #     if if_vlan[get_interface_name(out_interface)] == "T" or vlan_id == int(if_vlan[get_interface_name(out_interface)]):
+        #         send_to_link(out_interface, length, data)
+        #     elif vlan_id != -1:
+        #         tagged_frame = data[0:12] + create_vlan_tag(int(vlan_id)) + data[12:]
+        #         send_to_link(out_interface, length + 4, tagged_frame)
+        # else:
+        #     for i in interfaces:
+        #         if i != interface:
+        #             if_vlan_id = if_vlan.get(get_interface_name(i), -1)
+        #             if if_vlan_id == "T" or vlan_id == int(if_vlan_id):
+        #                 send_to_link(i, length, data)
+        #             elif vlan_id != -1:
+        #                 new_data = data[0:12] + data[16:]
+        #                 send_to_link(i, length - 4, new_data)
 
 		# if dest_mac in MAC_Table:
 		# 	print("in dest mac")
-		# 	if vlan_id == "T":
+		# 	if vlan_id != -1:
 
 		# 		print("trunk??>?>>")
 		# 		if if_vlan[get_interface_name(MAC_Table[dest_mac])] == "T":
@@ -134,46 +153,87 @@ def main():
 		# 		print(f"aici  >?>? new vlan id {vlan_id}")
 		# 		for i in interfaces:
 		# 			if i != interface:
-						
-		# 				# if vlan_id == "T":
-		# 				# 	if if_vlan[get_interface_name(i)] == "T":
-		# 				# 		send_to_link(i, length, data)
-		# 				# 	else:
-		# 				# 		if vlan_id == if_vlan[get_interface_name(i)]:
-		# 				# 			new_data = data[0:12] + data[16:]
-		# 				# 			send_to_link(i, length, new_data)
-		# 				# else:
-		# 				if if_vlan[get_interface_name(i)] == "T":
-		# 					print("ok 1???")
-		# 					tagged_frame = data[0:12] + create_vlan_tag(int(vlan_id)) + data[12:]
-		# 					send_to_link(i, length + 4, tagged_frame)
-		# 				else:
-		# 					print("ok2222 ???")
-		# 					if vlan_id == int(if_vlan[get_interface_name(i)]):
-		# 						print("vlan_id ===== vlan dest")
+		# 				if vlan_id != -1:
+		# 					if if_vlan[get_interface_name(i)] == "T":
 		# 						send_to_link(i, length, data)
+		# 					else:
+		# 						if vlan_id == if_vlan[get_interface_name(i)]:
+		# 							new_data = data[0:12] + data[16:]
+		# 							send_to_link(i, length, new_data)
+		# 				else:
+		# 					if if_vlan[get_interface_name(i)] == "T":
+		# 						print("ok 1???")
+		# 						tagged_frame = data[0:12] + create_vlan_tag(int(vlan_id)) + data[12:]
+		# 						send_to_link(i, length + 4, tagged_frame)
+		# 					else:
+		# 						print("ok2222 ???")
+		# 						if vlan_id == int(if_vlan[get_interface_name(i)]):
+		# 							print("vlan_id ===== vlan dest")
+		# 							send_to_link(i, length, data)
 		# 	else:
 		# 		for i in interfaces:
 		# 			if i != interface:
 						
-		# 				# if vlan_id == "T":
-		# 				# 	if if_vlan[get_interface_name(i)] == "T":
-		# 				# 		send_to_link(i, length, data)
-		# 				# 	else:
-		# 				# 		if vlan_id == if_vlan[get_interface_name(i)]:
-		# 				# 			new_data = data[0:12] + data[16:]
-		# 				# 			send_to_link(i, length, new_data)
-		# 				# else:
-		# 				if if_vlan[get_interface_name(i)] == "T":
-		# 					print("ok 1???")
-		# 					send_to_link(i, length, data)
+		# 				if vlan_id != -1:
+		# 					if if_vlan[get_interface_name(i)] == "T":
+		# 						send_to_link(i, length, data)
+		# 					else:
+		# 						if vlan_id == if_vlan[get_interface_name(i)]:
+		# 							new_data = data[0:12] + data[16:]
+		# 							send_to_link(i, length, new_data)
 		# 				else:
-		# 					print("ok2222 ???")
-		# 					if vlan_id == int(if_vlan[get_interface_name(i)]):
-		# 						print("vlan_id ===== vlan dest")
-		# 						new_data = data[0:12] + data[16:]
-		# 						send_to_link(i, length - 4, new_data)
-					
+		# 					if if_vlan[get_interface_name(i)] == "T":
+		# 						print("ok 1???")
+		# 						send_to_link(i, length, data)
+		# 					else:
+		# 						print("ok2222 ???")
+		# 						if vlan_id == int(if_vlan[get_interface_name(i)]):
+		# 							print("vlan_id ===== vlan dest")
+		# 							new_data = data[0:12] + data[16:]
+		# 							send_to_link(i, length - 4, new_data)
+						
+		
+		if dest_mac in MAC_Table:
+			out_interface = MAC_Table[dest_mac]
+
+			if if_vlan[get_interface_name(out_interface)] == 'T':
+				if if_vlan[get_interface_name(interface)] == 'T':
+					send_to_link(out_interface, length, data)
+				else:
+					tagged_frame = data[0:12] + create_vlan_tag(int(if_vlan[get_interface_name(interface)])) + data[12:]
+					send_to_link(out_interface, length + 4, tagged_frame)
+			else:
+				if if_vlan[get_interface_name(interface)] == 'T':
+					if vlan_id == int(if_vlan[get_interface_name(out_interface)]):
+						print("a intrat aici cand se intoare")
+						new_data = data[0:12] + data[16:]
+						send_to_link(out_interface, length - 4, new_data)
+				elif int(if_vlan[get_interface_name(interface)]) == int(if_vlan[get_interface_name(out_interface)]):
+					send_to_link(out_interface, length, data)
+
+		else:
+			print("broadcast")
+			for i in interfaces:
+				if i != interface:
+					if if_vlan[get_interface_name(i)] == 'T':
+						if if_vlan[get_interface_name(interface)] == 'T':
+							send_to_link(i, length, data)
+						else:
+							tagged_frame = data[0:12] + create_vlan_tag(int(if_vlan[get_interface_name(interface)])) + data[12:]
+							send_to_link(i, length + 4, tagged_frame)
+					else:
+						print("broadcast else")
+						if if_vlan[get_interface_name(interface)] == 'T':
+							if vlan_id == int(if_vlan[get_interface_name(i)]):
+								print("a intrat bine raw")
+								new_data = data[0:12] + data[16:]
+								send_to_link(i, length - 4, new_data)
+						elif int(if_vlan[get_interface_name(interface)]) == int(if_vlan[get_interface_name(i)]):
+							print(f"vlan_ID PARSAT ??!! {vlan_id}")
+							print(f"vlan_id din DICTONAR>>?? {if_vlan[get_interface_name(interface)]}")
+							send_to_link(i, length, data)
+
+
 
 		# if dest_mac in MAC_Table:
 		# 	send_to_link(MAC_Table[dest_mac], length, data)
