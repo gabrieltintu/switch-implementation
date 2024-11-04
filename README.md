@@ -1,31 +1,34 @@
-Scheleton for the Hub implementation.
+### Gabriel-Claudiu TINTU 333CAb - 2024-2025
 
-## Running
+# Switch Implementation
 
-```bash
-sudo python3 checker/topo.py
-```
+Simulated a network switch that offers VLAN support and basic STP functionality.
 
-This will open 9 terminals, 6 hosts and 3 for the switches. On the switch terminal you will run 
+Solved all tasks (1, 2, 3).
 
-```bash
-make run_switch SWITCH_ID=X # X is 0,1 or 2
-```
+## Forward with learning
 
-The hosts have the following IP addresses.
-```
-host0 192.168.1.1
-host1 192.168.1.2
-host2 192.168.1.3
-host3 192.168.1.4
-host4 192.168.1.5
-host5 192.168.1.6
-```
+The switch checks if the destination MAC address is in the MAC Table:
 
-We will be testing using the ICMP. For example, from host0 we will run:
+- if yes, then forward it to the destination
+- if no, broadcast, send on all interfaces
 
-```
-ping 192.168.1.2
-```
 
-Note: We will use wireshark for debugging. From any terminal you can run `wireshark&`.
+## VLAN support
+
+Updated the implementation from task 1 to include VLAN handling. The switch checks whether the receiving and sending ports are trunk or access, leading to four possible scenarios:
+
+- **trunk to trunk**: send the frame as it is
+- **trunk to access**: if VLAN matches, remove the VLAN tag and send the new frame
+- **access to trunk**: add the VLAN tag and send the new frame
+- **access to access**: if VLAN matches, send the frame as it is
+
+## STP support
+
+Implemented the STP support to avoid loops between switches:
+
+- initialized port states, bridge IDs and path cost
+- created BPDU frames to send every second
+- implemented functionality to receive and process BPDUs from other switches
+- completed the VLAN support by checking if the trunk port is in the "Listening" state
+
