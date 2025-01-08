@@ -1,10 +1,8 @@
-### Gabriel-Claudiu TINTU 333CAb - 2024-2025
+### © 2024 Gabriel-Claudiu TINTU
 
 # Switch Implementation
 
 Simulated a network switch that offers VLAN support and basic STP functionality.
-
-Solved all tasks (1, 2, 3).
 
 ## Forward with learning
 
